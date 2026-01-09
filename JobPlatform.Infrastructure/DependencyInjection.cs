@@ -37,7 +37,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
-
+        services.AddScoped<DbContext, AppDbContext>();
         return services;
     }
     

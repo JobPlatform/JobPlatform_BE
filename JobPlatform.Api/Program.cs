@@ -80,7 +80,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
+builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
 
 builder.Services.AddApplication();
 
@@ -97,6 +97,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.UseStaticFiles(); 
 
 await app.SeedRolesAsync();
 await app.SeedSkillCatalogAsync();

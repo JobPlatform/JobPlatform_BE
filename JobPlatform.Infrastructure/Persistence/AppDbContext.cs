@@ -74,7 +74,22 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .HasOne(x => x.Skill)
             .WithMany()
             .HasForeignKey(x => x.SkillId);
+        modelBuilder.Entity<CandidateSkill>()
+            .Property(x => x.Years)
+            .HasColumnType("decimal(4,1)"); // 0.0 -> 99.9
 
+        modelBuilder.Entity<CandidateProfile>()
+            .Property(x => x.CvFileName)
+            .HasMaxLength(255);
+
+        modelBuilder.Entity<CandidateProfile>()
+            .Property(x => x.CvContentType)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<CandidateProfile>()
+            .Property(x => x.CvStoragePath)
+            .HasMaxLength(500);
+        
         // JobSkillRequirement composite key
         modelBuilder.Entity<JobSkillRequirement>()
             .HasKey(x => new { x.JobPostId, x.SkillId });
