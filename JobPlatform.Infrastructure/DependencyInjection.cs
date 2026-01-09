@@ -41,16 +41,5 @@ public static class DependencyInjection
         return services;
     }
     
-    public static IServiceCollection AddApplication(this IServiceCollection services)
-    {
-        // Đăng ký MediatR
-        services.AddMediatR(Assembly.GetExecutingAssembly());
-
-        // Đăng ký AutoMapper
-        services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
-
-
-        return services;
-    }
+    
 }

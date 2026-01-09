@@ -24,7 +24,7 @@ public sealed class GetPublishedJobByIdHandler : IRequestHandler<GetPublishedJob
     {
         var job = await _db.JobPosts.AsNoTracking()
             .Include(j => j.EmployerProfile)
-            .Include(j => j.SkillRequirements).ThenInclude(r => r.Skill)
+            .Include(j => j.SkillRequirements).ThenInclude(r => r.Skill).ThenInclude(s=>s.Category)
             .FirstOrDefaultAsync(j => j.Id == request.JobId && j.Status == JobStatus.Published, ct);
 
         if (job is null) throw new NotFoundException("Job not found");

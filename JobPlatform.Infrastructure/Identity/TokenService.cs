@@ -94,57 +94,70 @@ public class TokenService : ITokenService
     }
 
     private (string accessToken, string refreshToken, RefreshToken refreshEntity) CreateTokenPair(TokenSubjectDto subject)
+{
+    var jwt = _config.GetSection("Jwt");
+
+    var keyStr = jwt["Key"];
+    if (string.IsNullOrWhiteSpace(keyStr))
+        throw new InvalidOperationException("Missing configuration: Jwt:Key");
+
+    if (!int.TryParse(jwt["AccessTokenMinutes"], out var accessMinutes))
+        throw new InvalidOperationException("Invalid configuration: Jwt:AccessTokenMinutes");
+
+    if (!int.TryParse(jwt["RefreshTokenDays"], out var refreshDays))
+        throw new InvalidOperationException("Invalid configuration: Jwt:RefreshTokenDays");
+
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyStr));
+    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+    var claims = new List<Claim>
     {
-        var jwt = _config.GetSection("Jwt");
+        new(JwtRegisteredClaimNames.Sub, subject.UserId.ToString()),
+        new(JwtRegisteredClaimNames.Email, subject.Email ?? string.Empty),
+        new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
 
-        var keyStr = jwt["Key"];
-        if (string.IsNullOrWhiteSpace(keyStr))
-            throw new InvalidOperationException("Missing configuration: Jwt:Key");
+        new(ClaimTypes.NameIdentifier, subject.UserId.ToString()),
+        new(ClaimTypes.Name, subject.UserName),
+    };
 
-        if (!int.TryParse(jwt["AccessTokenMinutes"], out var accessMinutes))
-            throw new InvalidOperationException("Invalid configuration: Jwt:AccessTokenMinutes");
+    if (subject.Roles is { Length: > 0 })
+        claims.AddRange(subject.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
-        if (!int.TryParse(jwt["RefreshTokenDays"], out var refreshDays))
-            throw new InvalidOperationException("Invalid configuration: Jwt:RefreshTokenDays");
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyStr));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new List<Claim>
+    // ✅ Thêm claims từ subject.ExtraClaims (nếu có) + tránh duplicate
+    if (subject.ExtraClaims is { Count: > 0 })
+    {
+        foreach (var c in subject.ExtraClaims)
         {
-            new(JwtRegisteredClaimNames.Sub, subject.UserId.ToString()),
-            new(JwtRegisteredClaimNames.Email, subject.Email ?? string.Empty),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(ClaimTypes.NameIdentifier, subject.UserId.ToString()),
-            new(ClaimTypes.Name, subject.UserName),
-        };
+            if (string.IsNullOrWhiteSpace(c.Type) || string.IsNullOrWhiteSpace(c.Value)) continue;
 
-        if (subject.Roles is { Count: > 0 })
-            claims.AddRange(subject.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
-
-        var token = new JwtSecurityToken(
-            issuer: jwt["Issuer"],
-            audience: jwt["Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(accessMinutes),
-            signingCredentials: creds
-        );
-
-        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-        // refresh token random + store hash
-        var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        var refreshHash = Hash(refreshToken);
-
-        var refreshEntity = new RefreshToken
-        {
-            UserId = subject.UserId,
-            TokenHash = refreshHash,
-            ExpiresAt = DateTimeOffset.UtcNow.AddDays(refreshDays),
-        };
-
-        return (accessToken, refreshToken, refreshEntity);
+            var exists = claims.Any(x => x.Type == c.Type && x.Value == c.Value);
+            if (!exists) claims.Add(c);
+        }
     }
+
+    var token = new JwtSecurityToken(
+        issuer: jwt["Issuer"],
+        audience: jwt["Audience"],
+        claims: claims,
+        expires: DateTime.UtcNow.AddMinutes(accessMinutes),
+        signingCredentials: creds
+    );
+
+    var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+    var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+    var refreshHash = Hash(refreshToken);
+
+    var refreshEntity = new RefreshToken
+    {
+        UserId = subject.UserId,
+        TokenHash = refreshHash,
+        ExpiresAt = DateTimeOffset.UtcNow.AddDays(refreshDays),
+    };
+
+    return (accessToken, refreshToken, refreshEntity);
+}
+
 
     private static string Hash(string input)
     {

@@ -9,7 +9,10 @@ namespace JobPlatform.Api.Controllers;
 [ApiController]
 [Route("employer/jobs")]
 [Authorize(Policy = "EmployerOnly")]
-public class EmployerJobsController : ControllerBase
+// [Authorize]
+
+public class EmployerJobsController 
+    : ControllerBase
 {
     private readonly IMediator _mediator;
     public EmployerJobsController(IMediator mediator) => _mediator = mediator;

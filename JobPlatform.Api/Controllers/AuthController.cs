@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using JobPlatform.Application.Common.Auth;
 using JobPlatform.Application.Common.Interfaces;
 using JobPlatform.Infrastructure.Identity;
@@ -89,11 +90,22 @@ public class AuthController : ControllerBase
     {
         var roles = await _userManager.GetRolesAsync(user);
 
-        return new TokenSubjectDto(
+        var extraClaims = new List<Claim>
+        {
+            new Claim(ClaimTypes.MobilePhone, user.PhoneNumber ?? ""),
+            new Claim("emailConfirmed", user.EmailConfirmed ? "true" : "false"),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim("phoneConfirmed", user.PhoneNumberConfirmed ? "true" : "false"),
+        };
+
+        
+        
+        return  new TokenSubjectDto(
             UserId: user.Id,
             Email: user.Email,
             UserName: user.UserName ?? user.Email ?? user.Id.ToString(),
-            Roles: roles.ToArray()
+            Roles: roles.ToArray(),
+            ExtraClaims: extraClaims
         );
     }
 }

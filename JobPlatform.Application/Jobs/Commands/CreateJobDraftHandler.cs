@@ -32,7 +32,7 @@ public class CreateJobDraftHandler : IRequestHandler<CreateJobDraftCommand,JobDe
         var employer = await _db.EmployerProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
         if (employer is null)
         {
-            employer = new EmployerProfile{UserId = userId, CompanyName = employer.CompanyName};
+            employer = new EmployerProfile{UserId = userId, CompanyName = request.Dto.CompanyName};
             _db.EmployerProfiles.Add(employer);
         }
         var job = new JobPost

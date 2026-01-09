@@ -1,8 +1,11 @@
+using System.Security.Claims;
+
 namespace JobPlatform.Application.Common.Auth;
 
-public sealed record TokenSubjectDto(
+public record TokenSubjectDto(
     Guid UserId,
     string? Email,
     string UserName,
-    IReadOnlyCollection<string> Roles
+    string[] Roles,
+    IReadOnlyCollection<Claim>? ExtraClaims = null
 );
