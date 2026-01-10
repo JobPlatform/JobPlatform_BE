@@ -11,5 +11,15 @@ public sealed record JobDetailDto(
     string Status,
     DateTimeOffset? PublishedAt,
     string CompanyName,
-    List<JobRequirementDto> Requirements
+    List<JobRequirementDetailDto> Requirements
+);
+
+public sealed record JobRequirementDetailDto(
+    Guid SkillId,
+    string SkillName,
+    string CategoryName,
+    int RequiredLevel,
+    bool IsMustHave,
+    int Weight,
+    string? RequirementDescription
 );

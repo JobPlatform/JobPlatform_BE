@@ -12,7 +12,13 @@ public class JobApplication : BaseEntity
     public CandidateProfile CandidateProfile { get; set; } = default!;
 
     public ApplicationStatus Status { get; set; } = ApplicationStatus.Applied;
-    public string? CvFilePath { get; set; } // upload sau
+
+    public string? CoverLetter { get; set; }
+    public DateTimeOffset AppliedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    // audit status change
+    public DateTimeOffset? StatusChangedAt { get; set; }
+    public string? StatusNote { get; set; } // employer note
 }
 
 public class JobRecommendation

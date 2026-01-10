@@ -115,6 +115,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .HasIndex(x => new { x.JobPostId, x.CandidateProfileId })
             .IsUnique();
 
+        modelBuilder.Entity<JobApplication>()
+            .Property(x => x.CoverLetter)
+            .HasMaxLength(2000);
+
+        modelBuilder.Entity<JobApplication>()
+            .Property(x => x.StatusNote)
+            .HasMaxLength(500);
+        
         // Conversation: 1 application -> 1 conversation (tuỳ bạn, mình set unique)
         modelBuilder.Entity<Conversation>()
             .HasIndex(x => x.JobApplicationId)

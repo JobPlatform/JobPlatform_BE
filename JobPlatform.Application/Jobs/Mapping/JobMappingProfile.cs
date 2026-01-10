@@ -8,7 +8,7 @@ public class JobMappingProfile : Profile
 {
     public JobMappingProfile()
     {
-        CreateMap<JobSkillRequirement, JobRequirementDto>()
+        CreateMap<JobSkillRequirement, JobRequirementDetailDto>()
             .ForCtorParam("SkillId", opt => opt.MapFrom(s => s.SkillId))
             .ForCtorParam("SkillName", opt => opt.MapFrom(s => s.Skill.Name))
             .ForCtorParam("CategoryName", opt => opt.MapFrom(s => s.Skill.Category.Name))
