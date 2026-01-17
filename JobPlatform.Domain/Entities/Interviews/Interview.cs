@@ -3,31 +3,33 @@ using JobPlatform.Domain.Entities.Applications;
 namespace JobPlatform.Domain.Entities.Interviews;
 
 
-public enum InterviewStatus { Scheduled = 0, Confirmed = 1, Rescheduled = 2, Cancelled = 3, Completed = 4 }
+public enum InterviewStatus
+{
+    Scheduled = 1,
+    Confirmed = 2,
+    RescheduleRequested = 3,
+    Rescheduled = 4,
+    Cancelled = 5
+}
 
 public class Interview : BaseEntity
 {
     public Guid JobApplicationId { get; set; }
     public JobApplication JobApplication { get; set; } = default!;
 
-    public DateTimeOffset ScheduledAt { get; set; }
-    public int DurationMinutes { get; set; } = 30;
+    public DateTimeOffset StartAt { get; set; }
+    public int DurationMinutes { get; set; } = 45;
+
+    public string? Location { get; set; }        // "Google Meet" 
+    
+    public string? MeetingUrl { get; set; }      
+
     public InterviewStatus Status { get; set; } = InterviewStatus.Scheduled;
 
-    // Call (MVP): room id/link (mock hoặc provider)
-    public string? MeetingRoomId { get; set; }
-    public string? MeetingLink { get; set; }
+    public string? Note { get; set; }            
+    public DateTimeOffset? ConfirmedAt { get; set; }
 
-    public ICollection<InterviewParticipant> Participants { get; set; } = new List<InterviewParticipant>();
-}
-
-public enum InterviewParticipantRole { Candidate = 0, Recruiter = 1, Interviewer = 2 }
-
-public class InterviewParticipant
-{
-    public Guid InterviewId { get; set; }
-    public Interview Interview { get; set; } = default!;
-
-    public Guid UserId { get; set; }
-    public InterviewParticipantRole Role { get; set; }
+    // Reminder
+    public DateTimeOffset? ReminderAt { get; set; }  
+    public bool ReminderSent { get; set; }
 }

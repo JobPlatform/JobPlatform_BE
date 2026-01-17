@@ -20,6 +20,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<SkillDomain> SkillDomains => Set<SkillDomain>();
     public DbSet<SkillCategory> SkillCategories => Set<SkillCategory>();
     public DbSet<Skill> Skills => Set<Skill>();
+    
 
     public DbSet<CandidateProfile> CandidateProfiles => Set<CandidateProfile>();
     public DbSet<EmployerProfile> EmployerProfiles => Set<EmployerProfile>();
@@ -141,6 +142,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .WithMany(x => x.Members)
             .HasForeignKey(x => x.ConversationId);
 
+        
+        
         modelBuilder.Entity<Notification>(b =>
         {
             b.Property(x => x.TargetUrl).HasMaxLength(500);
@@ -156,14 +159,16 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .WithMany(x => x.Messages)
             .HasForeignKey(x => x.ConversationId);
 
-        // InterviewParticipant composite
-        modelBuilder.Entity<InterviewParticipant>()
-            .HasKey(x => new { x.InterviewId, x.UserId });
+        modelBuilder.Entity<Interview>()
+            .HasIndex(i => i.JobApplicationId);
 
-        modelBuilder.Entity<InterviewParticipant>()
-            .HasOne(x => x.Interview)
-            .WithMany(x => x.Participants)
-            .HasForeignKey(x => x.InterviewId);
+        modelBuilder.Entity<Interview>()
+            .Property(i => i.Location).HasMaxLength(300);
+
+        modelBuilder.Entity<Interview>()
+            .Property(i => i.MeetingUrl).HasMaxLength(500);
+
+       
 
         // Recommendation composite
         modelBuilder.Entity<JobRecommendation>()

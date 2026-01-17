@@ -10,6 +10,7 @@ using JobPlatform.Infrastructure;
 using JobPlatform.Infrastructure.Identity;
 using JobPlatform.Infrastructure.Notifications;
 using JobPlatform.Infrastructure.Processors;
+using JobPlatform.Infrastructure.ReminderJobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -104,6 +105,9 @@ builder.Services.AddScoped<IUserEmailProvider, IdentityUserEmailProvider<Applica
 
 builder.Services.AddScoped<INotificationPublisher, NotificationPublisher>();
 
+builder.Services.AddScoped<IInterviewReminderJob, InterviewReminderJob>();
+
+
 builder.Services.AddApplication();
 
 var app = builder.Build();
@@ -128,6 +132,10 @@ RecurringJob.AddOrUpdate<IOutboxProcessor>(
     x => x.ProcessAsync(CancellationToken.None),
     Cron.Minutely);
 
+RecurringJob.AddOrUpdate<IInterviewReminderJob>(
+    "interview-reminders",
+    x => x.RunAsync(CancellationToken.None),
+    Cron.Minutely);
 await app.SeedRolesAsync();
 await app.SeedSkillCatalogAsync();
 app.Run();
