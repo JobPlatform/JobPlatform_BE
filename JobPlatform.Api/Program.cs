@@ -1,10 +1,15 @@
 using System.Security.Claims;
 using System.Text;
+using Hangfire;
 using JobPlatform.Api.Seed;
 using JobPlatform.Api.Services;
 using JobPlatform.Application;
 using JobPlatform.Application.Common.Interfaces;
+using JobPlatform.Application.Common.Models;
 using JobPlatform.Infrastructure;
+using JobPlatform.Infrastructure.Identity;
+using JobPlatform.Infrastructure.Notifications;
+using JobPlatform.Infrastructure.Processors;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -50,12 +55,12 @@ builder.Services
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30),
 
-            // để Role/Name đọc đúng
+            
             RoleClaimType = ClaimTypes.Role,
             NameClaimType = ClaimTypes.NameIdentifier
         };
 
-        // Bật log để thấy lý do 401 (rất hữu ích)
+        
         opt.Events = new JwtBearerEvents
         {
             OnAuthenticationFailed = ctx =>
@@ -79,8 +84,25 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddHangfire(cfg =>
+    cfg.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHangfireServer();
+
+// DI
+builder.Services.AddScoped<IOutboxProcessor, OutboxProcessor>();
+builder.Services.AddScoped<IJobMatchingService, JobMatchingService>(); 
+
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+
+builder.Services.AddScoped<IEmailSender, MailKitEmailSender>();
+
+builder.Services.AddScoped<IUserEmailProvider, IdentityUserEmailProvider<ApplicationUser>>();
+
+builder.Services.AddScoped<INotificationPublisher, NotificationPublisher>();
 
 builder.Services.AddApplication();
 
@@ -98,6 +120,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.UseStaticFiles(); 
+
+app.UseHangfireDashboard(); // dev , prod nhớ auth
+
+RecurringJob.AddOrUpdate<IOutboxProcessor>(
+    "outbox-processor",
+    x => x.ProcessAsync(CancellationToken.None),
+    Cron.Minutely);
 
 await app.SeedRolesAsync();
 await app.SeedSkillCatalogAsync();

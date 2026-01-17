@@ -10,11 +10,13 @@ public sealed class ChangeApplicationStatusHandler : IRequestHandler<ChangeAppli
 {
     private readonly IAppDbContext _db;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificationPublisher _noti;
 
-    public ChangeApplicationStatusHandler(IAppDbContext db, ICurrentUserService currentUser)
+    public ChangeApplicationStatusHandler(IAppDbContext db, ICurrentUserService currentUser,INotificationPublisher noti)
     {
         _db = db;
         _currentUser = currentUser;
+        _noti = noti;
     }
 
     public async Task<Unit> Handle(ChangeApplicationStatusCommand request, CancellationToken ct)
@@ -28,6 +30,7 @@ public sealed class ChangeApplicationStatusHandler : IRequestHandler<ChangeAppli
 
         var app = await _db.JobApplications
             .Include(a => a.JobPost).ThenInclude(j => j.EmployerProfile)
+            .Include(a => a.CandidateProfile)
             .FirstOrDefaultAsync(a => a.Id == request.ApplicationId, ct);
 
         if (app is null) throw new NotFoundException("Application not found");
@@ -53,6 +56,20 @@ public sealed class ChangeApplicationStatusHandler : IRequestHandler<ChangeAppli
         app.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync(ct);
+        
+        await _noti.NotifyAsync(
+            userId: app.CandidateProfile.UserId,
+            type: "ApplicationStatusChanged",
+            title: $"Application update: {app.JobPost.Title}",
+            body: $"Your application status is now: {app.Status}. Note: {app.StatusNote ?? "N/A"}",
+            data: new { jobId = app.JobPostId, applicationId = app.Id, status = app.Status.ToString() },
+            targetUrl: $"/candidates/me/applications?focus={app.Id}", 
+            sendEmail: true,
+            ct: ct
+        );
+
+
+
         return Unit.Value;
     }
 

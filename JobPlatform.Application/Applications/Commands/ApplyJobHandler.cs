@@ -13,10 +13,12 @@ public sealed class ApplyJobHandler : IRequestHandler<ApplyJobCommand, Guid>
     private readonly IAppDbContext _db;
     private readonly ICurrentUserService _currentUser;
 
-    public ApplyJobHandler(IAppDbContext db, ICurrentUserService currentUser)
+    private readonly INotificationPublisher _noti;
+    public ApplyJobHandler(IAppDbContext db, ICurrentUserService currentUser, INotificationPublisher noti)
     {
         _db = db;
         _currentUser = currentUser;
+        _noti = noti;
     }
 
     public async Task<Guid> Handle(ApplyJobCommand request, CancellationToken ct)
@@ -30,6 +32,7 @@ public sealed class ApplyJobHandler : IRequestHandler<ApplyJobCommand, Guid>
             throw new NotFoundException("Candidate profile not found");
 
         var job = await _db.JobPosts
+            .Include(j => j.EmployerProfile)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == request.JobId, ct);
 
@@ -55,6 +58,18 @@ public sealed class ApplyJobHandler : IRequestHandler<ApplyJobCommand, Guid>
 
         _db.JobApplications.Add(app);
         await _db.SaveChangesAsync(ct);
+
+        await _noti.NotifyAsync(
+            userId: job.EmployerProfile.UserId,
+            type: "JobApplied",
+            title: $"New application: {job.Title}",
+            body: $"A candidate has applied to your job \"{job.Title}\".",
+            data: new { jobId = job.Id, applicationId = app.Id, candidateProfileId = candidate.Id },
+            targetUrl: $"/employer/jobs/{job.Id}/applications?focus={app.Id}", 
+            sendEmail: true,
+            ct: ct
+        );
+
 
         return app.Id;
     }

@@ -29,6 +29,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Interview> Interviews => Set<Interview>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    
+    public DbSet<JobMatch> JobMatches => Set<JobMatch>();
+
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -137,6 +141,15 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .WithMany(x => x.Members)
             .HasForeignKey(x => x.ConversationId);
 
+        modelBuilder.Entity<Notification>(b =>
+        {
+            b.Property(x => x.TargetUrl).HasMaxLength(500);
+            b.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt });
+        });
+        
+        modelBuilder.Entity<Notification>()
+            .HasIndex(x => new { x.UserId, x.EmailSentAt });
+        
         // Message
         modelBuilder.Entity<Message>()
             .HasOne(x => x.Conversation)
@@ -165,5 +178,15 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .HasOne(x => x.CandidateProfile)
             .WithMany()
             .HasForeignKey(x => x.CandidateProfileId);
+        
+        modelBuilder.Entity<OutboxMessage>(b =>
+        {
+            b.Property(x => x.Type).HasMaxLength(50).IsRequired();
+            b.HasIndex(x => new { x.ProcessedAt, x.OccurredAt });
+        });
+        modelBuilder.Entity<JobMatch>()
+            .HasIndex(x => new { x.JobPostId, x.CandidateProfileId })
+            .IsUnique();
+
     }
 }

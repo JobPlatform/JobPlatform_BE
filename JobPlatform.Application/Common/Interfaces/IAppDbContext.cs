@@ -27,6 +27,9 @@ public interface IAppDbContext
     DbSet<Interview> Interviews { get; }
 
     DbSet<Notification> Notifications { get; }
+    DbSet<JobMatch> JobMatches { get; }
+
+    DbSet<OutboxMessage> OutboxMessages { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

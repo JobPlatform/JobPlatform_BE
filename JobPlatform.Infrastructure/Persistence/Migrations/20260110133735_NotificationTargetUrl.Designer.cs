@@ -4,6 +4,7 @@ using JobPlatform.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobPlatform.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260110133735_NotificationTargetUrl")]
+    partial class NotificationTargetUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -212,41 +215,6 @@ namespace JobPlatform.Infrastructure.Persistence.Migrations
                     b.ToTable("InterviewParticipant");
                 });
 
-            modelBuilder.Entity("JobPlatform.Domain.Entities.JobMatch", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CandidateProfileId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsNotified")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("JobPostId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("NotifiedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<decimal>("Score")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JobPostId", "CandidateProfileId")
-                        .IsUnique();
-
-                    b.ToTable("JobMatches");
-                });
-
             modelBuilder.Entity("JobPlatform.Domain.Entities.Jobs.JobPost", b =>
                 {
                     b.Property<Guid>("Id")
@@ -339,9 +307,6 @@ namespace JobPlatform.Infrastructure.Persistence.Migrations
                     b.Property<string>("DataJson")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset?>("EmailSentAt")
-                        .HasColumnType("datetimeoffset");
-
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
@@ -365,51 +330,9 @@ namespace JobPlatform.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "EmailSentAt");
-
                     b.HasIndex("UserId", "IsRead", "CreatedAt");
 
                     b.ToTable("Notifications");
-                });
-
-            modelBuilder.Entity("JobPlatform.Domain.Entities.OutboxMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Attempt")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Error")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("PayloadJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset?>("ProcessedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProcessedAt", "OccurredAt");
-
-                    b.ToTable("OutboxMessages");
                 });
 
             modelBuilder.Entity("JobPlatform.Domain.Entities.Profiles.CandidateProfile", b =>
@@ -939,17 +862,6 @@ namespace JobPlatform.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Interview");
-                });
-
-            modelBuilder.Entity("JobPlatform.Domain.Entities.JobMatch", b =>
-                {
-                    b.HasOne("JobPlatform.Domain.Entities.Jobs.JobPost", "JobPost")
-                        .WithMany()
-                        .HasForeignKey("JobPostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("JobPost");
                 });
 
             modelBuilder.Entity("JobPlatform.Domain.Entities.Jobs.JobPost", b =>

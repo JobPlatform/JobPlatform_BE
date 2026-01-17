@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using JobPlatform.Application.Common.Exceptions;
 using JobPlatform.Application.Common.Interfaces;
@@ -43,6 +44,16 @@ public sealed class PublishJobHandler : IRequestHandler<PublishJobCommand, JobDe
         job.PublishedAt = DateTimeOffset.UtcNow;
         job.UpdatedAt = DateTimeOffset.UtcNow;
 
+        _db.OutboxMessages.Add(new OutboxMessage
+        {
+            Type = "JobPublished",
+            PayloadJson = JsonSerializer.Serialize(new
+            {
+                jobId = job.Id,
+                employerUserId = job.EmployerProfile.UserId
+            })
+        });
+        
         await _db.SaveChangesAsync(ct);
 
         return _mapper.Map<JobDetailDto>(job);
