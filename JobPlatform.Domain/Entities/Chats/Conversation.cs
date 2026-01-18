@@ -5,7 +5,7 @@ public class Conversation : BaseEntity
 {
     public Guid JobApplicationId { get; set; }
     public JobApplication JobApplication { get; set; } = default!;
-
+    public bool IsActive { get; set; } = true;
     public ICollection<ConversationMember> Members { get; set; } = new List<ConversationMember>();
     public ICollection<Message> Messages { get; set; } = new List<Message>();
 }
@@ -16,6 +16,12 @@ public class ConversationMember
     public Conversation Conversation { get; set; } = default!;
 
     public Guid UserId { get; set; }
+    public DateTimeOffset JoinedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    
+    public int UnreadCount { get; set; }
+    public Guid? LastReadMessageId { get; set; }
+    public DateTimeOffset? LastReadAt { get; set; }
 }
 
 public class Message : BaseEntity

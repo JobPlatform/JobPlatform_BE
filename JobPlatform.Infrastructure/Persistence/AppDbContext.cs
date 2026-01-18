@@ -27,6 +27,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<JobPost> JobPosts => Set<JobPost>();
     public DbSet<JobApplication> JobApplications => Set<JobApplication>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<ConversationMember> ConversationMembers => Set<ConversationMember>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Interview> Interviews => Set<Interview>();
     public DbSet<Notification> Notifications => Set<Notification>();
@@ -129,13 +130,31 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .HasMaxLength(500);
         
         // Conversation: 1 application -> 1 conversation (tuỳ bạn, mình set unique)
-        modelBuilder.Entity<Conversation>()
-            .HasIndex(x => x.JobApplicationId)
-            .IsUnique();
+        modelBuilder.Entity<Conversation>(b =>
+        {
+            // 1 application = 1 conversation
+            b.HasIndex(x => x.JobApplicationId).IsUnique();
+            b.Property(x => x.IsActive).HasDefaultValue(true);
+        });
 
-        // ConversationMember composite
-        modelBuilder.Entity<ConversationMember>()
-            .HasKey(x => new { x.ConversationId, x.UserId });
+        modelBuilder.Entity<ConversationMember>(b =>
+        {
+            b.HasKey(x => new { x.ConversationId, x.UserId });
+
+            b.HasIndex(x => x.UserId);
+            b.HasIndex(x => new { x.UserId, x.UnreadCount });
+
+            b.Property(x => x.UnreadCount).HasDefaultValue(0);
+        });
+
+        modelBuilder.Entity<Message>(b =>
+        {
+            b.Property(x => x.Content).HasMaxLength(2000).IsRequired();
+
+            // keyset paging nhanh
+            b.HasIndex(x => new { x.ConversationId, x.SentAt, x.Id });
+        });
+
 
         modelBuilder.Entity<ConversationMember>()
             .HasOne(x => x.Conversation)

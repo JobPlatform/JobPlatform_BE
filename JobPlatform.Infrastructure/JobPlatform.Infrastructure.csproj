@@ -3,6 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="..\JobPlatform.Application\JobPlatform.Application.csproj" />
     <ProjectReference Include="..\JobPlatform.Domain\JobPlatform.Domain.csproj" />
+
+    
   </ItemGroup>
 
   <ItemGroup>

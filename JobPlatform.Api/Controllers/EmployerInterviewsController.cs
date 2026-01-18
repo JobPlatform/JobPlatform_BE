@@ -22,6 +22,10 @@ public class EmployerInterviewsController : ControllerBase
         [FromQuery] int pageSize = 50)
         => Ok(await _mediator.Send(new GetEmployerInterviewsQuery(from, to, includeCancelled, page, pageSize)));
     
+    [HttpGet("/employer/interviews/{id:guid}")]
+    public async Task<ActionResult<InterviewDetailDto>> Detail(Guid id)
+        => Ok(await _mediator.Send(new GetEmployerInterviewDetailQuery(id)));
+    
     [HttpPost("/employer/applications/{applicationId:guid}/interviews")]
     public async Task<IActionResult> Create(Guid applicationId, [FromBody] CreateInterviewDto dto)
     {

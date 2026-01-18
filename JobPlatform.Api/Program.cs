@@ -1,12 +1,14 @@
 using System.Security.Claims;
 using System.Text;
 using Hangfire;
+using JobPlatform.Api.Realtime;
 using JobPlatform.Api.Seed;
 using JobPlatform.Api.Services;
 using JobPlatform.Application;
 using JobPlatform.Application.Common.Interfaces;
 using JobPlatform.Application.Common.Models;
 using JobPlatform.Infrastructure;
+
 using JobPlatform.Infrastructure.Identity;
 using JobPlatform.Infrastructure.Notifications;
 using JobPlatform.Infrastructure.Processors;
@@ -71,7 +73,17 @@ builder.Services
                     .CreateLogger("JWT");
                 logger.LogError(ctx.Exception, "JWT auth failed");
                 return Task.CompletedTask;
-            }
+            },
+            OnMessageReceived = context =>
+            {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/chat"))
+            context.Token = accessToken;
+
+            return Task.CompletedTask;
+        }
         };
     });
 
@@ -107,6 +119,10 @@ builder.Services.AddScoped<INotificationPublisher, NotificationPublisher>();
 
 builder.Services.AddScoped<IInterviewReminderJob, InterviewReminderJob>();
 
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IChatHubNotifier, ChatHubNotifier>();
+
+
 
 builder.Services.AddApplication();
 
@@ -126,6 +142,8 @@ app.MapControllers();
 app.UseStaticFiles(); 
 
 app.UseHangfireDashboard(); // dev , prod nhớ auth
+
+
 
 RecurringJob.AddOrUpdate<IOutboxProcessor>(
     "outbox-processor",

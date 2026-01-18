@@ -22,6 +22,7 @@ public interface IAppDbContext
     DbSet<JobApplication> JobApplications { get; }
 
     DbSet<Conversation> Conversations { get; }
+    DbSet<ConversationMember> ConversationMembers { get; }
     DbSet<Message> Messages { get; }
 
     DbSet<Interview> Interviews { get; }

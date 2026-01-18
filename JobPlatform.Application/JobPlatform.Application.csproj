@@ -2,6 +2,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\JobPlatform.Domain\JobPlatform.Domain.csproj" />
+   
+    
   </ItemGroup>
 
   <ItemGroup>

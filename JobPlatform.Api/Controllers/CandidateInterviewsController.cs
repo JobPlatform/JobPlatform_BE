@@ -23,6 +23,9 @@ public class CandidateInterviewsController : ControllerBase
         [FromQuery] int pageSize = 20)
         => Ok(await _mediator.Send(new GetMyInterviewsQuery(from, to, upcomingOnly, page, pageSize)));
 
+    [HttpGet("/candidates/me/interviews/{id:guid}")]
+    public async Task<ActionResult<InterviewDetailDto>> Detail(Guid id)
+        => Ok(await _mediator.Send(new GetCandidateInterviewDetailQuery(id)));
     
     [HttpPut("/candidates/me/interviews/{id:guid}/confirm")]
     public async Task<IActionResult> Confirm(Guid id)
